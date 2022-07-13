@@ -8,6 +8,8 @@
 
 python版本的bilibili弹幕姬(更新中)
 
+协议支持：[SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
+
 ### 项目结构
 
 需要的python版本>=3.7
