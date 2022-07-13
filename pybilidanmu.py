@@ -25,14 +25,17 @@ headers = {
 
 
 class Pybilidanmu():
-	def __init__(self):
+	def __init__(self, roomid='5295848'):
 		self.get_danmu_info_url = 'http://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id='
-		self.roomid = "14695348"
+		self.roomid = str(roomid)
 		self.wss_url = 'wss://tx-bj-live-comet-01.chat.bilibili.com/sub'
 		self.token = ""
 		
 		# ws连接
 		self.ws_connect = None
+		
+		# 获取的弹幕/消息列表
+		self.dm_list = []
 
 	# get请求进入房间
 	async def enter_room(self):
@@ -82,6 +85,7 @@ class Pybilidanmu():
 				tmp = await self._recv_pack()   # 接收并处理包
 				print(tmp, end='\n\n')
 				# 尝试解析内容
+				self.dm_list.append(tmp)
 		
 		
 		print('> 连接成功')
@@ -158,7 +162,7 @@ class Pybilidanmu():
 
 
 if __name__ == '__main__':
-	client = Pybilidanmu()
+	client = Pybilidanmu(23718393)
 	tasks = [
 		client.enter_room(),
 		client.heartbeat(),
