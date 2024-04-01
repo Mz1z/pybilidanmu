@@ -6,7 +6,7 @@ import time
 
 # 连接弹幕服务器
 def connect():
-	client = pybilidanmu.Pybilidanmu(23718393)
+	client = pybilidanmu.Pybilidanmu(30805550)
 	coroutine1 = client.enter_room()
 	coroutine2 = client.heartbeat()
 	coroutine3 = fetch_dm(client)	         # 获取弹幕并显示的coroutine

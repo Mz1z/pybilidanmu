@@ -15,10 +15,16 @@ import ssl
 import zlib
 import brotli
 
-headers = {
+ws_headers = {
 	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36',
 	'Origin': 'https://live.bilibili.com',
 	'Connection': 'Upgrade',
+	'Accept-Language': 'zh-CN,zh;q=0.9',
+}
+
+http_headers = {
+	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36',
+	'Origin': 'https://live.bilibili.com',
 	'Accept-Language': 'zh-CN,zh;q=0.9',
 }
 
@@ -26,7 +32,7 @@ headers = {
 
 class Pybilidanmu():
 	def __init__(self, roomid='5295848'):
-		self.get_danmu_info_url = 'http://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id='
+		self.get_danmu_info_url = 'http://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id={}&type=0'
 		self.roomid = str(roomid)
 		self.wss_url = 'wss://tx-bj-live-comet-01.chat.bilibili.com/sub'
 		self.token = ""
@@ -39,10 +45,11 @@ class Pybilidanmu():
 
 	# get请求进入房间
 	async def enter_room(self):
-		url = self.get_danmu_info_url + self.roomid
+		url = self.get_danmu_info_url.format(self.roomid)
+		http_headers['Referer'] = f"https://live.bilibili.com/{self.roomid}"
 		print(f'> 正在进入{url} ...')
 		async with aiohttp.ClientSession() as s:
-			async with s.get(url) as r:
+			async with s.get(url, headers=http_headers) as r:
 				t = await r.text()
 				data = json.loads(t)
 				# print(json.dumps(data, indent=4))
@@ -54,12 +61,15 @@ class Pybilidanmu():
 					port = host_list[0]['wss_port']
 					self.wss_url = host+":"+str(port)+'/sub'   # 这里要加上sub不然连不上，笑死
 					print(f'  > 弹幕地址: {self.wss_url}')
+				else:
+					print(data)
+					exit()
 		# 连接弹幕服务器
 		await self.connect_dm()
 					
 	# 心跳包
 	async def heartbeat(self):
-		while self.ws_connect == None:
+		while self.ws_connect is None:
 			await asyncio.sleep(1)
 			print('> 心跳包等待连接')
 		while True:
@@ -73,7 +83,7 @@ class Pybilidanmu():
 		print('> 正在连接wss服务器...')
 		async with websockets.connect(
 				self.wss_url, 
-				extra_headers=headers
+				extra_headers=ws_headers
 				) as websocket:
 			self.ws_connect = websocket  # 保存一下连接
 			# 发送登录包等等
@@ -162,12 +172,13 @@ class Pybilidanmu():
 
 
 if __name__ == '__main__':
-	client = Pybilidanmu(23718393)
-	tasks = [
-		client.enter_room(),
-		client.heartbeat(),
-	]
+	client = Pybilidanmu(30805550)
+	# here is task for python3.11
 	loop = asyncio.get_event_loop()
+	tasks = [
+		loop.create_task(_) for _ in [client.enter_room(),client.heartbeat()]
+	]
+	print(tasks)
 	try:
 		loop.run_until_complete(asyncio.wait(tasks))
 	except KeyboardInterrupt:
